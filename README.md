@@ -8,7 +8,7 @@ https://github.com/NUSRI-P22/p22.Odometry.git
 ```
 - Compile
 ```
-cd cd p22.Odometry
+cd p22.Odometry
 
 colcon build
 ```
