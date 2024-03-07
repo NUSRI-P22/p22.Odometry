@@ -1,4 +1,11 @@
 # p22.Odometry
+## Build
+
+
+- Download
+```
+https://github.com/NUSRI-P22/p22.Odometry.git
+```
 - Compile
 ```
 cd cd p22.Odometry
