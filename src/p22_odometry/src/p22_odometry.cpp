@@ -4,12 +4,13 @@
 #include <cstring>
 #include <iostream>
 
+float data_value[13];
 class OdometryNode : public rclcpp::Node
 {
 public:
 
     // Replace "/dev/ttyUSB0" with the actual serial port name
-    OdometryNode() : Node("p22_odometry"), serial_port_("/dev/ttyACM0", 115200, serial::Timeout::simpleTimeout(1000))
+    OdometryNode() : Node("p22_odometry"), serial_port_("/dev/ttyUSB1", 115200, serial::Timeout::simpleTimeout(1000))
     {
         publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("odometry", 1000/period_ms);
         
@@ -22,22 +23,35 @@ private:
         if (serial_port_.available() > 0)
         {
             nav_msgs::msg::Odometry msg;
-            std::string data = serial_port_.readline();
             // data: "x, y, z, Q.x, Q.y, Q.z, Q.w, linear.x, linear.y, linear.z, angular.x, angular.y, angular.z\n"
+            std::string data = serial_port_.readline();
             int len = data.length();
-            float data_value[13];
             int tot = 0;
             std::string tmp = "";
-            for(int i = 0; i < len; i++){
-                if(data[i] == ' ') continue;
-                if(data[i] == ',' || data[i] == '\n'){
-                    data_value[tot++] = std::stof(tmp);
-                    // std::cout << tmp << std::endl;
-                    tmp = "";
+
+            for (int i = 0; i < len; i++) {
+                if (data[i] == ' ' || data[i] == '\n') {
+                    // 跳过空格和换行符
                     continue;
                 }
-                tmp += data[i];
+                if (data[i] == ',') {
+                    // 将 tmp 转换为浮点数并存储到 data_value 数组中
+                    try {
+                        data_value[tot++] = std::stof(tmp);
+                    } catch (const std::invalid_argument& e) {
+                        std::cerr << "Error converting string to float: " << e.what() << std::endl;
+                        // 处理无效的浮点数表示
+                    }
+                    tmp = "";
+                } else {
+                    tmp += data[i];
+                }
             }
+
+            // // 检查是否成功解析了13个值
+            // if (tot != 12) {
+            //     std::cerr << "Error: Expected 13 values, but found " << tot << std::endl;
+            // } 
             // std::cout << data << std::endl;
             msg.header.stamp = rclcpp::Clock{}.now();
             msg.header.frame_id = "odom";
